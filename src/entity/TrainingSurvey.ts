@@ -18,4 +18,8 @@ export class TrainingSurvey {
 
   @OneToMany(() => ExerciseRating, (rating) => rating.survey)
   exerciseRatings: ExerciseRating[];
+
+  @ManyToOne(() => User)
+  bestDogOwner: User
+
 }

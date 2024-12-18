@@ -13,6 +13,9 @@ export class User {
   dogName: string;
 
   @Column()
+  password: string;
+
+  @Column()
   phoneNumber: string;
 
   @OneToMany(() => TrainingSurvey, (survey) => survey.user)
