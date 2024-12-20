@@ -15,8 +15,11 @@ export class User {
   @Column()
   password: string;
 
-  @Column()
+  @Column({unique: true})
   phoneNumber: string;
+
+  @Column({default: false})
+  isAdmin: boolean;
 
   @OneToMany(() => TrainingSurvey, (survey) => survey.user)
   surveys: TrainingSurvey[];

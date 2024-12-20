@@ -13,10 +13,11 @@ class UserController {
             const user = await userRepository.findOneBy({phoneNumber: phoneNumber})
 
             if (sha1(password) === user.password) {
-                const accessToken = jwt.sign({uid: user.id}, process.env.ACCESS_TOKEN_SECRET_KEY, {expiresIn: '2h'})
-                const refreshToken = jwt.sign({uid: user.id}, process.env.REFRESH_TOKEN_SECRET_KEY, {expiresIn: '14d'})
+                const accessToken = jwt.sign({userId: user.id}, process.env.ACCESS_TOKEN_SECRET_KEY, {expiresIn: '2h'})
+                const refreshToken = jwt.sign({userId: user.id}, process.env.REFRESH_TOKEN_SECRET_KEY, {expiresIn: '14d'})
 
                 res.status(200).send({result: true, accessToken, refreshToken})
+                return
             } else {
                 throw new Error('invalid password')
             }
@@ -40,8 +41,8 @@ class UserController {
 
             await AppDataSource.manager.save(newUser)
 
-            const accessToken = jwt.sign({uid: newUser.id}, process.env.ACCESS_TOKEN_SECRET_KEY, {expiresIn: '2h'})
-            const refreshToken = jwt.sign({uid: newUser.id}, process.env.REFRESH_TOKEN_SECRET_KEY, {expiresIn: '14d'})
+            const accessToken = jwt.sign({userId: newUser.id}, process.env.ACCESS_TOKEN_SECRET_KEY, {expiresIn: '2h'})
+            const refreshToken = jwt.sign({userId: newUser.id}, process.env.REFRESH_TOKEN_SECRET_KEY, {expiresIn: '14d'})
 
             res.status(201).send({result: true, accessToken, refreshToken})
         } catch (error) {
@@ -52,10 +53,10 @@ class UserController {
 
     async edit(req: Request, res: Response) {
         try {
-            const {id, name, dogName, phoneNumber} = req.body
+            const {userId, name, dogName, phoneNumber} = req.body
 
             const userRepository = AppDataSource.getRepository(User)
-            const user = await userRepository.findOneBy({id: id})
+            const user = await userRepository.findOneBy({id: userId})
 
             user.name = name
             user.dogName = dogName
@@ -72,10 +73,10 @@ class UserController {
 
     async delete(req: Request, res: Response) {
         try {
-            const { id } = req.body;
+            const { userId } = req.body;
     
             const userRepository = AppDataSource.getRepository(User);
-            const user = await userRepository.findOneBy({ id });
+            const user = await userRepository.findOneBy({ id: userId });
     
             if (!user) {
                 throw new Error('User not found');
@@ -91,8 +92,47 @@ class UserController {
     }
 
     async getStats(req: Request, res: Response) {
-
+        const { uid } = req.params;
+    
+        try {
+            const userRepository = AppDataSource.getRepository(User);
+            
+            const user = await userRepository.findOne({
+                where: { id: uid },
+                relations: ['surveys', 'surveys.exerciseRatings', 'surveys.bestDogOwner']
+            });
+    
+            if (!user) {
+                res.status(404).json({ message: 'User not found' });
+                return
+            }
+    
+            const surveyStats = user.surveys.map(survey => ({
+                surveyId: survey.id,
+                date: survey.date,
+                isConfirmed: survey.isConfirmed,
+                exerciseRatings: survey.exerciseRatings.map(rating => ({
+                    exerciseName: rating.exerciseName,
+                    rating: rating.rating
+                })),
+                bestDogOwner: survey.bestDogOwner ? {
+                    id: survey.bestDogOwner.id,
+                    name: survey.bestDogOwner.name,
+                    dogName: survey.bestDogOwner.dogName
+                } : null
+            }));
+    
+            return res.json({
+                user: { id: user.id, name: user.name, dogName: user.dogName },
+                surveys: surveyStats
+            });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
     }
+    
+    
 
     async getUserById(req: Request, res: Response) {
         try {
@@ -127,6 +167,22 @@ class UserController {
         } catch (error) {
             console.error(error);
             res.status(400).send(error.message);
+        }
+    }
+
+    async protected(req: Request, res: Response) {
+        try {
+            res.status(200).send({result: true})
+        } catch (error) {
+            res.status(400).send({result: false, error: error.message})
+        }
+    }
+
+    async protectedAdmin(req: Request, res: Response) {
+        try {
+            res.status(200).send({result: true, isAdmin: true})
+        } catch (error) {
+            res.status(400).send({result: false, isAdmin: false, error: error.message})
         }
     }
 }

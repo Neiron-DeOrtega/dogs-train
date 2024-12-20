@@ -11,7 +11,10 @@ export class TrainingSurvey {
   date: Date;
 
   @Column({ default: false })
-  isConfirmed: boolean;  
+  isConfirmed: boolean;
+
+  @Column({ default: false }) 
+  isCompleted: boolean;  
 
   @ManyToOne(() => User, (user) => user.surveys)
   user: User;
@@ -20,6 +23,5 @@ export class TrainingSurvey {
   exerciseRatings: ExerciseRating[];
 
   @ManyToOne(() => User)
-  bestDogOwner: User
-
+  bestDogOwner: User;
 }

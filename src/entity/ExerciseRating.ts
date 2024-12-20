@@ -9,7 +9,7 @@ export class ExerciseRating {
   @Column()
   exerciseName: string; 
 
-  @Column()
+  @Column({ nullable: true })
   rating: number; 
 
   @ManyToOne(() => TrainingSurvey, (survey) => survey.exerciseRatings)
