@@ -96,43 +96,57 @@ class UserController {
     
         try {
             const userRepository = AppDataSource.getRepository(User);
-            
+    
+            // Загружаем все необходимые связи
             const user = await userRepository.findOne({
                 where: { id: uid },
-                relations: ['surveys', 'surveys.exerciseRatings', 'surveys.bestDogOwner']
+                relations: [
+                    'trainingSurveyUsers',
+                    'trainingSurveyUsers.survey',
+                    'trainingSurveyUsers.survey.exerciseRatings',
+                    'trainingSurveyUsers.bestDogOwner',
+                ],
             });
     
             if (!user) {
                 res.status(404).json({ message: 'User not found' });
-                return
+                return;
             }
     
-            const surveyStats = user.surveys.map(survey => ({
-                surveyId: survey.id,
-                date: survey.date,
-                isConfirmed: survey.isConfirmed,
-                exerciseRatings: survey.exerciseRatings.map(rating => ({
-                    exerciseName: rating.exerciseName,
-                    rating: rating.rating
-                })),
-                bestDogOwner: survey.bestDogOwner ? {
-                    id: survey.bestDogOwner.id,
-                    name: survey.bestDogOwner.name,
-                    dogName: survey.bestDogOwner.dogName
-                } : null
-            }));
+            const surveyStats = user.trainingSurveyUsers.map(surveyUser => {
+                const trainingSurvey = surveyUser.survey;
+    
+                if (!trainingSurvey) {
+                    return null; 
+                }
+    
+                return {
+                    surveyId: trainingSurvey.id,
+                    date: trainingSurvey.date,
+                    isConfirmed: trainingSurvey.isConfirmed,
+                    exerciseRatings: trainingSurvey.exerciseRatings.map(rating => ({
+                        exerciseName: rating.exerciseName,
+                        rating: rating.rating,
+                    })),
+                    bestDogOwner: surveyUser.bestDogOwner
+                        ? {
+                              id: surveyUser.bestDogOwner.id,
+                              name: surveyUser.bestDogOwner.name,
+                              dogName: surveyUser.bestDogOwner.dogName,
+                          }
+                        : null,
+                };
+            }).filter(stat => stat !== null)
     
             return res.json({
                 user: { id: user.id, name: user.name, dogName: user.dogName },
-                surveys: surveyStats
+                surveys: surveyStats,
             });
         } catch (error) {
             console.error(error);
             return res.status(500).json({ message: 'Internal server error' });
         }
-    }
-    
-    
+    }    
 
     async getUserById(req: Request, res: Response) {
         try {

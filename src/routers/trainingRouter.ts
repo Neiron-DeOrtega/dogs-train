@@ -6,7 +6,7 @@ import { tokenVerify } from "../middleware/tokenVerify"
 const express = require('express') 
 const trainingRouter = express.Router()
 
-trainingRouter.post('/send', tokenVerify, trainingController.send)
+trainingRouter.post('/submit', tokenVerify, trainingController.submit)
 trainingRouter.post('/create', tokenVerify, adminVerify, trainingController.create)
 trainingRouter.get('/confirm/:sid', tokenVerify, adminVerify, trainingController.confirm)
 

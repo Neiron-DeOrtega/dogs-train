@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
-import { TrainingSurvey } from "./TrainingSurvey";
+import { TrainingSurveyUser } from "./TrainingSurveyUser";
 
 @Entity()
 export class User {
@@ -7,20 +7,20 @@ export class User {
   id: number;
 
   @Column()
-  name: string;
+  name: string; 
 
   @Column()
-  dogName: string;
+  dogName: string; 
 
   @Column()
   password: string;
 
-  @Column({unique: true})
-  phoneNumber: string;
+  @Column({ unique: true })
+  phoneNumber: string; 
 
-  @Column({default: false})
-  isAdmin: boolean;
+  @Column({ default: false })
+  isAdmin: boolean; 
 
-  @OneToMany(() => TrainingSurvey, (survey) => survey.user)
-  surveys: TrainingSurvey[];
+  @OneToMany(() => TrainingSurveyUser, (tsu) => tsu.user)
+  trainingSurveyUsers: TrainingSurveyUser[]; 
 }

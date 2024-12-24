@@ -1,5 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from "typeorm";
-import { User } from "./User";
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
+import { TrainingSurveyUser } from "./TrainingSurveyUser";
 import { ExerciseRating } from "./ExerciseRating";
 
 @Entity()
@@ -8,20 +8,14 @@ export class TrainingSurvey {
   id: number;
 
   @Column()
-  date: Date;
+  date: Date; 
 
   @Column({ default: false })
-  isConfirmed: boolean;
+  isConfirmed: boolean; 
 
-  @Column({ default: false }) 
-  isCompleted: boolean;  
+  @OneToMany(() => TrainingSurveyUser, (tsu) => tsu.survey)
+  trainingSurveyUsers: TrainingSurveyUser[]; 
 
-  @ManyToOne(() => User, (user) => user.surveys)
-  user: User;
-
-  @OneToMany(() => ExerciseRating, (rating) => rating.survey)
-  exerciseRatings: ExerciseRating[];
-
-  @ManyToOne(() => User)
-  bestDogOwner: User;
+  @OneToMany(() => ExerciseRating, (rating) => rating.survey, { cascade: true })
+  exerciseRatings: ExerciseRating[]; 
 }
